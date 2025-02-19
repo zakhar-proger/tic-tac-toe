@@ -1,54 +1,78 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect, Suspense } from "react";
 import styles from "./game.module.css";
-import { Grid, ButtonRefs } from "./types";
+import { Board, ButtonRefs, gameState } from "./types";
+import { useSearchParams, useRouter } from "next/navigation";
+import { v4 as uuidv4 } from "uuid";
 
-const CELL_COUNT = 3;
+const BOARD_SIZE = 3;
 
-export default function Game() {
-  const [grid, setGrid] = useState<Grid>(
-    Array(CELL_COUNT)
+function Game() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const wsRef = useRef<WebSocket | null>(null);
+  const [gameId, setGameId] = useState<String | null>(null);
+  const [gameState, setGameState] = useState<gameState>({
+    board: Array(BOARD_SIZE)
       .fill(null)
-      .map(() => Array(CELL_COUNT).fill(null))
-  ); // Сетка
+      .map(() => Array(BOARD_SIZE).fill(null)),
+    status: "Подключение...",
+    currentPlayer: "X",
+  });
 
-  const buttonRefs = useRef<ButtonRefs>({});
+  useEffect(() => {
+    const params = new URLSearchParams(searchParams);
+    const newGameId = params.get("id") || uuidv4();
 
-  const handleCellClick = (index1: number, index2: number) => {
-    let newGrid = [...grid];
-    newGrid[index1][index2] = "X";
-    setGrid(newGrid);
-
-    const buttonKey = `${index1}-${index2}`;
-    const button = buttonRefs.current[buttonKey];
-
-    if (button) {
-      button.value = "X";
+    if (!params.get("id")) {
+      params.set("id", newGameId);
+      router.replace(`?${params.toString()}`);
+      console.log(`Игра ${newGameId} инициализирована`);
     }
-  };
+
+    setGameId(newGameId);
+  }, [searchParams, router]);
+
+  useEffect(() => {
+    if (!gameId) return;
+
+    const ws = new WebSocket("ws://26.16.135.206:3001");
+    wsRef.current = ws;
+
+    ws.onopen = () => {
+      console.log("Websocket соединение установлено");
+      ws.send(
+        JSON.stringify({
+          type: "join",
+          gameId,
+          gameState,
+        })
+      );
+    };
+
+    ws.onmessage = (event) => {
+      console.log(JSON.parse(event.data).status);
+    };
+
+    ws.onclose = () => {
+      console.log("Соединение закрыто");
+    };
+  }, [gameId]);
 
   return (
     <main className={styles.main}>
       <div
         className={styles.grid}
         style={{
-          gridTemplateColumns: `repeat(${CELL_COUNT}, 100px)`,
-          gridTemplateRows: `repeat(${CELL_COUNT}, 100px)`,
+          gridTemplateColumns: `repeat(${BOARD_SIZE}, 100px)`,
+          gridTemplateRows: `repeat(${BOARD_SIZE}, 100px)`,
         }}
       >
-        {grid.map((row, index1) =>
+        {gameState.board.map((row, index1) =>
           row.map((cell, index2) => {
-            const buttonKey = `${index1}-${index2}`;
             return (
-              <button
-                key={buttonKey}
-                ref={(el) => {
-                  buttonRefs.current[buttonKey] = el;
-                }}
-                className={styles.cell}
-                onClick={() => handleCellClick(index1, index2)}
-              >
+              <button key={`${index1}-${index2}`} className={styles.cell}>
                 {cell}
               </button>
             );
@@ -56,5 +80,13 @@ export default function Game() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function GamePage() {
+  return (
+    <Suspense fallback={<div>Загрузка...</div>}>
+      <Game />
+    </Suspense>
   );
 }
