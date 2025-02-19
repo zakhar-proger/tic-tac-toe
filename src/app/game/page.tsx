@@ -20,6 +20,7 @@ function Game() {
     status: "Подключение...",
     currentPlayer: "X",
   });
+  const [isWaiting, setIsWaiting] = useState<Boolean>(true);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
@@ -52,34 +53,45 @@ function Game() {
     };
 
     ws.onmessage = (event) => {
-      console.log(JSON.parse(event.data).status);
+      const data = JSON.parse(event.data);
+      console.log(data.status);
+
+      if (data.status === "ready") {
+        setIsWaiting(false);
+      }
     };
 
     ws.onclose = () => {
       console.log("Соединение закрыто");
     };
-  }, [gameId]);
+  }, [gameId, isWaiting]);
 
   return (
-    <main className={styles.main}>
-      <div
-        className={styles.grid}
-        style={{
-          gridTemplateColumns: `repeat(${BOARD_SIZE}, 100px)`,
-          gridTemplateRows: `repeat(${BOARD_SIZE}, 100px)`,
-        }}
-      >
-        {gameState.board.map((row, index1) =>
-          row.map((cell, index2) => {
-            return (
-              <button key={`${index1}-${index2}`} className={styles.cell}>
-                {cell}
-              </button>
-            );
-          })
-        )}
-      </div>
-    </main>
+    <Suspense fallback={<div>Загрузка...</div>}>
+      {isWaiting ? (
+        <div>Ожидание второго игрока</div>
+      ) : (
+        <main className={styles.main}>
+          <div
+            className={styles.grid}
+            style={{
+              gridTemplateColumns: `repeat(${BOARD_SIZE}, 100px)`,
+              gridTemplateRows: `repeat(${BOARD_SIZE}, 100px)`,
+            }}
+          >
+            {gameState.board.map((row, index1) =>
+              row.map((cell, index2) => {
+                return (
+                  <button key={`${index1}-${index2}`} className={styles.cell}>
+                    {cell}
+                  </button>
+                );
+              })
+            )}
+          </div>
+        </main>
+      )}
+    </Suspense>
   );
 }
 

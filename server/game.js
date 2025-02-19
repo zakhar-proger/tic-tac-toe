@@ -21,13 +21,10 @@ wss.on("connection", (ws) => {
               .map(() => Array(BOARD_SIZE).fill(null)),
             currentPlayer: "X",
           });
-          sendGameState(
-            games.get(message.gameId),
-            "Ожидание второго игрока..."
-          );
+          sendGameState(games.get(message.gameId), "waiting");
         } else {
           game.players.push(ws);
-          sendGameState(games.get(message.gameId), "Игра началась! Ходит: Х");
+          sendGameState(games.get(message.gameId), "ready");
         }
         break;
       case "move":
