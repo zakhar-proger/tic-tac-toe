@@ -21,6 +21,7 @@ function Game() {
     currentPlayer: "X",
   });
   const [isWaiting, setIsWaiting] = useState<Boolean>(true);
+  const [winner, setWinner] = useState<String | null>(null);
 
   useEffect(() => {
     const params = new URLSearchParams(searchParams);
@@ -64,6 +65,8 @@ function Game() {
           status: data.status,
           currentPlayer: data.currentPlayer,
         });
+      } else if (data.status === "win") {
+        setWinner(gameState.currentPlayer);
       }
     };
 
@@ -82,6 +85,7 @@ function Game() {
 
   return (
     <Suspense fallback={<div>Загрузка...</div>}>
+      {winner ? <h1>Player {winner} are win !</h1> : null}
       {isWaiting ? (
         <div>Ожидание второго игрока</div>
       ) : (

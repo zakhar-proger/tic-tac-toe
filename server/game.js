@@ -1,5 +1,5 @@
 import { WebSocketServer } from "ws";
-import { sendGameState } from "./func.js";
+import { sendGameState, checkWinner } from "./func.js";
 
 const wss = new WebSocketServer({ port: 3001 });
 const games = new Map();
@@ -44,8 +44,13 @@ wss.on("connection", (ws) => {
             game.board[index1][index2] = game.currentPlayer;
             game.currentPlayer = game.currentPlayer === "X" ? "O" : "X";
             sendGameState(game, "move");
+            const winner = checkWinner(game.board);
+            if (winner) {
+              sendGameState(game, "win");
+            }
           }
         }
+        break;
       default:
         break;
     }
