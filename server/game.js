@@ -28,7 +28,24 @@ wss.on("connection", (ws) => {
         }
         break;
       case "move":
-        break;
+        if (!game && game.players.length < 2) return;
+
+        const playerIndex = game.players.indexOf(ws);
+        const isXPlayer = playerIndex === 0;
+        const isOPlayer = playerIndex === 1;
+
+        if (
+          (game.currentPlayer === "X" && isXPlayer) ||
+          (game.currentPlayer === "O" && isOPlayer)
+        ) {
+          const [index1, index2] = message.cellIndex;
+
+          if (game.board[index1][index2] === null) {
+            game.board[index1][index2] = game.currentPlayer;
+            game.currentPlayer = game.currentPlayer === "X" ? "O" : "X";
+            sendGameState(game, "move");
+          }
+        }
       default:
         break;
     }

@@ -17,7 +17,7 @@ function Game() {
     board: Array(BOARD_SIZE)
       .fill(null)
       .map(() => Array(BOARD_SIZE).fill(null)),
-    status: "Подключение...",
+    status: "connect",
     currentPlayer: "X",
   });
   const [isWaiting, setIsWaiting] = useState<Boolean>(true);
@@ -58,13 +58,27 @@ function Game() {
 
       if (data.status === "ready") {
         setIsWaiting(false);
+      } else if (data.status === "move") {
+        setGameState({
+          board: data.board,
+          status: data.status,
+          currentPlayer: data.currentPlayer,
+        });
       }
     };
 
     ws.onclose = () => {
       console.log("Соединение закрыто");
     };
-  }, [gameId, isWaiting]);
+  }, [gameId]);
+
+  function handleCellCLick(index1: number, index2: number) {
+    if (wsRef.current) {
+      wsRef.current.send(
+        JSON.stringify({ type: "move", cellIndex: [index1, index2], gameId })
+      );
+    }
+  }
 
   return (
     <Suspense fallback={<div>Загрузка...</div>}>
@@ -82,7 +96,13 @@ function Game() {
             {gameState.board.map((row, index1) =>
               row.map((cell, index2) => {
                 return (
-                  <button key={`${index1}-${index2}`} className={styles.cell}>
+                  <button
+                    key={`${index1}-${index2}`}
+                    className={styles.cell}
+                    onClick={() => {
+                      handleCellCLick(index1, index2);
+                    }}
+                  >
                     {cell}
                   </button>
                 );
