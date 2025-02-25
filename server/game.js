@@ -42,16 +42,16 @@ wss.on("connection", (ws) => {
 
           if (game.board[index1][index2] === null) {
             game.board[index1][index2] = game.currentPlayer;
-            game.currentPlayer = game.currentPlayer === "X" ? "O" : "X";
-            sendGameState(game, "move");
             const winner = checkWinner(game.board);
-            if (winner) {
+
+            if (!winner) {
+              game.currentPlayer = game.currentPlayer === "X" ? "O" : "X";
+              sendGameState(game, "move");
+            } else {
               sendGameState(game, "win");
             }
           }
         }
-        break;
-      default:
         break;
     }
   });

@@ -34,3 +34,20 @@
   font-size: 20px;
   font-weight: bold;
 }
+
+.winner {
+  position: absolute;
+  width: 100vw;
+  height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  background-color: var(--background-transparent);
+}
+
+.winner__title {
+  font-size: 48px;
+  color: var(--foreground);
+}

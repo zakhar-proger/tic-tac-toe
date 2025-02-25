@@ -91,9 +91,15 @@ function Game() {
 
   return (
     <Suspense fallback={<div>Загрузка...</div>}>
-      {winner ? <h1>Player {winner} are win !</h1> : null}
+      {winner ? (
+        <div className={styles.winner}>
+          <h1 className={styles.winner__title}>Player {winner} are win !</h1>
+        </div>
+      ) : null}
       {isWaiting ? (
-        <div>Ожидание второго игрока</div>
+        <div className={styles.winner}>
+          <h1 className={styles.winner__title}>Ожидание второго игрока...</h1>
+        </div>
       ) : (
         <main className={styles.main}>
           <div
